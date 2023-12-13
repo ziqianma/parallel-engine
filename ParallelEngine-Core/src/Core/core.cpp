@@ -1,11 +1,32 @@
 #include "core.h"
 
 namespace Core {
-    void Renderer::render() {
 
+    void Renderer::render(SceneNode* scene) {
+        scene->render();
+        for (int i = 0; i < scene->getChildren().size(); i++) {
+            render(scene->getChildren()[i]);
+        }
     }
 
-	void Application::init(Renderer& renderer) {
+    Renderer::~Renderer() {
+        delete m_sceneRoot;
+    }
+
+    SceneNode::~SceneNode() {
+        parent = NULL;
+        for (int i = 0; i < children.size(); i++) {
+            // recursively delete children
+            delete children[i];
+        }
+    }
+
+    void SceneNode::addChild(SceneNode* node) {
+        node->parent = this;
+        children.push_back(node);
+    }
+
+	void Application::init(Renderer& renderer, SceneNode* scene) {
         glfwInit();
         glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
         glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
@@ -41,7 +62,7 @@ namespace Core {
             glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
             handleWindowInput(window);
-            renderer.render();
+            renderer.render(scene);
 
             glfwSwapBuffers(window);
             glfwPollEvents();
